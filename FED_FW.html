@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkGrid | Modern Freelancer Marketplace</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            },
+            accent: {
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#f43f5e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Glassmorphism helpers */
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .gradient-hero {
+      background: radial-gradient(circle at 50% -20%, #4338ca 0%, #0f172a 70%);
+    }
+    .text-gradient {
+      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .badge-glow {
+      box-shadow: 0 0 15px -3px rgba(99, 102, 241, 0.4);
+    }
+    .animate-pulse-slow {
+      animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .7; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-40 w-full glass-panel border-b border-slate-800 transition-all duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('landing')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-brand-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1">
+            Work<span class="text-indigo-400">Grid</span>
+            <span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 ml-1">Pro</span>
+          </span>
+          <span class="text-[11px] text-slate-400 font-medium -mt-1 hidden sm:inline">Decentralized Talent Network</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex items-center space-x-1" id="nav-links">
+        <button onclick="navigateTo('landing')" class="px-3.5 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors">
+          Home
+        </button>
+        <button onclick="navigateTo('freelancer')" class="px-3.5 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors flex items-center gap-1.5">
+          <span>Find Work</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-cyan-900/50 text-cyan-400 border border-cyan-700/50">Market</span>
+        </button>
+        <button onclick="navigateTo('client')" class="px-3.5 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors">
+          Hire Talent
+        </button>
+        <button id="admin-nav-link" onclick="navigateTo('admin')" class="px-3.5 py-2 text-sm font-medium text-amber-300/80 hover:text-amber-200 hover:bg-amber-950/30 rounded-lg transition-colors hidden">
+          Admin Console
+        </button>
+      </nav>
+
+      <!-- Auth State & User Menu -->
+      <div class="flex items-center gap-3" id="nav-auth-container">
+        <!-- Will be populated dynamically by updateAuthUI() -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Main App Shell Router -->
+  <main class="flex-1 w-full" id="main-content">
+    
+    <!-- ============================================== -->
+    <!-- VIEW 1: PUBLIC LANDING PAGE                    -->
+    <!-- ============================================== -->
+    <section id="view-landing" class="w-full">
+      <!-- Hero Section -->
+      <div class="gradient-hero pt-16 pb-24 border-b border-slate-800/80 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(#312e81_1px,transparent_1px)] [background-size:24px_24px] opacity-25"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-6">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            Over 2,400 Verified Freelancers Online Now
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-none mb-6">
+            Where Visionary Projects Meet <span class="text-gradient">Elite Independent Talent</span>
+          </h1>
+
+          <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            Empower your company with top software engineers, AI developers, product designers, and strategists on demand with secure milestone escrow protection.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-14">
+            <button onclick="navigateTo('client')" class="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Post a Project</span>
+            </button>
+            <button onclick="navigateTo('freelancer')" class="w-full sm:w-auto px-7 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <span>Browse Job Board</span>
+            </button>
+          </div>
+
+          <!-- Hero Metrics -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 border-t border-slate-800/80">
+            <div class="p-4 rounded-xl glass-card">
+              <div class="text-2xl font-bold text-white">$14.2M+</div>
+              <div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Paid to Talent</div>
+            </div>
+            <div class="p-4 rounded-xl glass-card">
+              <div class="text-2xl font-bold text-cyan-400">99.4%</div>
+              <div class="text-xs text-slate-400 uppercase tracking-wider mt-1">On-Time Completion</div>
+            </div>
+            <div class="p-4 rounded-xl glass-card">
+              <div class="text-2xl font-bold text-indigo-400">15 mins</div>
+              <div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Avg First Proposal</div>
+            </div>
+            <div class="p-4 rounded-xl glass-card">
+              <div class="text-2xl font-bold text-emerald-400">0% Risk</div>
+              <div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Escrow Guarantee</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Grid -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+          <div>
+            <h2 class="text-3xl font-bold text-white tracking-tight">Explore High-Demand Categories</h2>
+            <p class="text-slate-400 mt-2 text-sm">Select a specialized field to discover pre-vetted domain experts.</p>
+          </div>
+          <button onclick="navigateTo('freelancer')" class="mt-4 md:mt-0 text-indigo-400 hover:text-indigo-300 font-medium text-sm flex items-center gap-1 group">
+            <span>Explore all projects</span>
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Card 1 -->
+          <div onclick="filterJobsByCategory('Full Stack Web')" class="group p-6 rounded-2xl glass-panel hover:border-indigo-500/50 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">Full Stack Web</h3>
+            <p class="text-slate-400 text-sm mt-2">React, Next.js, Node.js, Python, PostgreSQL, and scalable microservices.</p>
+            <div class="mt-4 text-xs font-semibold text-indigo-400 flex items-center justify-between">
+              <span id="cat-count-web">18 open jobs</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div onclick="filterJobsByCategory('AI & Machine Learning')" class="group p-6 rounded-2xl glass-panel hover:border-cyan-500/50 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-4 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white group-hover:text-cyan-300 transition-colors">AI & Machine Learning</h3>
+            <p class="text-slate-400 text-sm mt-2">LLM fine-tuning, RAG pipelines, PyTorch, vision systems, and autonomous agents.</p>
+            <div class="mt-4 text-xs font-semibold text-cyan-400 flex items-center justify-between">
+              <span id="cat-count-ai">12 open jobs</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div onclick="filterJobsByCategory('UI/UX & Product Design')" class="group p-6 rounded-2xl glass-panel hover:border-purple-500/50 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors">UI/UX & Product Design</h3>
+            <p class="text-slate-400 text-sm mt-2">Design systems, Figma wireframing, high-fidelity prototypes, brand identity.</p>
+            <div class="mt-4 text-xs font-semibold text-purple-400 flex items-center justify-between">
+              <span id="cat-count-design">8 open jobs</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div onclick="filterJobsByCategory('Cloud & DevOps')" class="group p-6 rounded-2xl glass-panel hover:border-emerald-500/50 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">Cloud & DevOps</h3>
+            <p class="text-slate-400 text-sm mt-2">AWS, Kubernetes, Terraform, CI/CD pipelines, Docker, and zero-downtime ops.</p>
+            <div class="mt-4 text-xs font-semibold text-emerald-400 flex items-center justify-between">
+              <span id="cat-count-devops">9 open jobs</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured Jobs Teaser -->
+      <div class="bg-slate-900/50 py-16 border-y border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <span class="text-indigo-400 text-xs uppercase tracking-widest font-semibold">Live Marketplace</span>
+              <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">Recently Posted Missions</h2>
+            </div>
+            <button onclick="navigateTo('freelancer')" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 rounded-lg text-sm font-medium border border-indigo-500/30 transition-all">
+              View All Postings
+            </button>
+          </div>
+          <div id="landing-featured-jobs" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Platform Demo Credentials Bar -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="p-6 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            </div>
+            <div>
+              <h4 class="text-white font-semibold">Quick Demo Login Shortcuts</h4>
+              <p class="text-xs text-slate-400 mt-0.5">Test any role instantly with pre-seeded data & workflow capabilities.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2.5">
+            <button onclick="quickLogin('admin@workgrid.com', 'admin123')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-mono transition-colors">
+              ⚡ Admin (admin@workgrid.com)
+            </button>
+            <button onclick="quickLogin('client@demo.com', 'client123')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-mono transition-colors">
+              ⚡ Client (client@demo.com)
+            </button>
+            <button onclick="quickLogin('freelancer@demo.com', 'free123')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-mono transition-colors">
+              ⚡ Freelancer (freelancer@demo.com)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 2: CLIENT PORTAL                          -->
+    <!-- ============================================== -->
+    <section id="view-client" class="w-full hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Client Header & Quick Action -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-8 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Client Workspace</h1>
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Hiring Hub</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">Manage project postings, evaluate inbound bids, release milestones, and rate freelancers.</p>
+          </div>
+          <button onclick="openModal('post-job-modal')" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Post New Job Requirement</span>
+          </button>
+        </div>
+
+        <!-- Client Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+          <div class="p-5 rounded-2xl glass-panel">
+            <span class="text-xs uppercase font-medium text-slate-400">Total Posted</span>
+            <div class="text-2xl font-bold text-white mt-1" id="client-stat-total">0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel">
+            <span class="text-xs uppercase font-medium text-slate-400">In Review & Active</span>
+            <div class="text-2xl font-bold text-cyan-400 mt-1" id="client-stat-active">0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel">
+            <span class="text-xs uppercase font-medium text-slate-400">Completed Contracts</span>
+            <div class="text-2xl font-bold text-emerald-400 mt-1" id="client-stat-completed">0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel">
+            <span class="text-xs uppercase font-medium text-slate-400">Escrow Committed</span>
+            <div class="text-2xl font-bold text-indigo-300 mt-1" id="client-stat-escrow">$0</div>
+          </div>
+        </div>
+
+        <!-- Job Listings Tab Area -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <span>Your Posted Job Requisitions</span>
+              <span id="client-job-count" class="text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-300 font-mono">0</span>
+            </h2>
+            <div class="text-xs text-slate-400">Click a job to expand proposals and manage candidate hiring</div>
+          </div>
+
+          <!-- Dynamic List of Client's Jobs -->
+          <div id="client-jobs-list" class="space-y-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 3: FREELANCER PORTAL                      -->
+    <!-- ============================================== -->
+    <section id="view-freelancer" class="w-full hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Freelancer Subheader -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Freelance Talent Hub</h1>
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Marketplace</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">Discover high-budget verified projects, submit strategic bids, and track deliverables.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="openFreelancerProfileModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <span>My Portfolio & Profile</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter and Search Bar -->
+        <div class="p-4 rounded-2xl glass-panel mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div class="relative w-full md:w-96">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input type="text" id="job-search-input" oninput="renderFreelancerJobList()" placeholder="Search by title, skill (e.g. React, Python), keyword..." class="w-full pl-11 pr-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <select id="job-category-filter" onchange="renderFreelancerJobList()" class="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-indigo-500">
+              <option value="ALL">All Categories</option>
+              <option value="Full Stack Web">Full Stack Web</option>
+              <option value="AI & Machine Learning">AI & Machine Learning</option>
+              <option value="UI/UX & Product Design">UI/UX & Product Design</option>
+              <option value="Cloud & DevOps">Cloud & DevOps</option>
+              <option value="Mobile Development">Mobile Development</option>
+            </select>
+
+            <select id="job-sort-filter" onchange="renderFreelancerJobList()" class="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-indigo-500">
+              <option value="newest">Newest First</option>
+              <option value="budget-high">Budget: High to Low</option>
+              <option value="budget-low">Budget: Low to High</option>
+            </select>
+
+            <button onclick="toggleMyBidsView()" id="toggle-bids-btn" class="px-4 py-2.5 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>My Submitted Bids (<span id="freelancer-bid-count">0</span>)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section: Available Projects or My Bids View -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h2 id="freelancer-section-heading" class="text-xl font-bold text-white">Available Marketplace Missions</h2>
+            <span id="freelancer-jobs-matched" class="text-xs text-slate-400">Loading...</span>
+          </div>
+
+          <div id="freelancer-jobs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic project cards -->
+          </div>
+
+          <div id="freelancer-bids-container" class="space-y-4 hidden">
+            <!-- Dynamic my bids list -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 4: ADMIN MODULE                           -->
+    <!-- ============================================== -->
+    <section id="view-admin" class="w-full hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Admin Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-8 border-b border-slate-800 gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Platform Administration Console</h1>
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Superadmin Access</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">Platform moderation, live user account states, escrow transaction audit, and listing governance.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="resetPlatformData()" class="px-3.5 py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span>Reset Demo Seed Data</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Overview Metrics (Grid) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <div class="p-5 rounded-2xl glass-panel border-l-4 border-l-indigo-500">
+            <span class="text-xs uppercase font-medium text-slate-400">Total Registered Users</span>
+            <div class="text-2xl font-bold text-white mt-1" id="adm-total-users">0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel border-l-4 border-l-cyan-500">
+            <span class="text-xs uppercase font-medium text-slate-400">Total Jobs Posted</span>
+            <div class="text-2xl font-bold text-white mt-1" id="adm-total-jobs">0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel border-l-4 border-l-emerald-500">
+            <span class="text-xs uppercase font-medium text-slate-400">Total Inbound Bids</span>
+            <div class="text-2xl font-bold text-emerald-400 mt-1" id="adm-total-bids">0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel border-l-4 border-l-amber-500">
+            <span class="text-xs uppercase font-medium text-slate-400">Platform Escrow Volume</span>
+            <div class="text-2xl font-bold text-amber-300 mt-1" id="adm-escrow-volume">$0</div>
+          </div>
+          <div class="p-5 rounded-2xl glass-panel border-l-4 border-l-purple-500">
+            <span class="text-xs uppercase font-medium text-slate-400">Commission (5%)</span>
+            <div class="text-2xl font-bold text-purple-300 mt-1" id="adm-commission">$0</div>
+          </div>
+        </div>
+
+        <!-- Admin Tabs / Sub-panels -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Column 1 & 2: User Moderation & Job Moderation -->
+          <div class="lg:col-span-2 space-y-8">
+            
+            <!-- User Governance Table -->
+            <div class="glass-panel rounded-2xl p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <span>User Account Control</span>
+                  <span class="text-xs text-slate-400 font-normal">(Manage verification & bans)</span>
+                </h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                  <thead class="text-xs uppercase bg-slate-900/80 text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th class="px-4 py-3">User</th>
+                      <th class="px-4 py-3">Role</th>
+                      <th class="px-4 py-3">Status</th>
+                      <th class="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adm-users-table" class="divide-y divide-slate-800/60 font-mono text-xs">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Job Listings Moderation -->
+            <div class="glass-panel rounded-2xl p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                  <span>Job Listing Moderation</span>
+                  <span class="text-xs text-slate-400 font-normal">(Takedowns & Flagging)</span>
+                </h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                  <thead class="text-xs uppercase bg-slate-900/80 text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th class="px-4 py-3">Job Title</th>
+                      <th class="px-4 py-3">Client</th>
+                      <th class="px-4 py-3">Budget</th>
+                      <th class="px-4 py-3">Status</th>
+                      <th class="px-4 py-3 text-right">Moderation</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adm-jobs-table" class="divide-y divide-slate-800/60 font-mono text-xs">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Column 3: Platform Audit & Escrow Ledger -->
+          <div class="space-y-6">
+            <div class="glass-panel rounded-2xl p-6">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Live Audit Ledger</span>
+              </h3>
+              <p class="text-xs text-slate-400 mb-4">Immutable chronological log of platform escrow releases, proposals, and contracts.</p>
+              
+              <div id="adm-audit-logs" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                <!-- Log entries -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-panel border-t border-slate-800/80 mt-auto py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+        <span>WorkGrid Core v2.4 &bull; Built with Pure HTML, CSS Grid/Flexbox &amp; JS LocalStorage</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <span>Admin Module Enabled</span>
+        <span>Client &amp; Freelancer Roles Enabled</span>
+        <span class="text-indigo-400">Zero Server Dependencies</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- MODAL 1: AUTHENTICATION (LOGIN / REGISTER)     -->
+  <!-- ============================================== -->
+  <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <button onclick="closeModal('auth-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-slate-800 mb-6">
+        <button id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-500 text-center">
+          Sign In
+        </button>
+        <button id="auth-tab-signup" onclick="switchAuthTab('signup')" class="flex-1 pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent text-center">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Email Address</label>
+          <input type="email" id="login-email" required placeholder="you@example.com" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+          <input type="password" id="login-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition-all">
+          Sign In to WorkGrid
+        </button>
+
+        <!-- Quick Fill Helpers -->
+        <div class="pt-3 border-t border-slate-800 text-center">
+          <p class="text-xs text-slate-400 mb-2">Try sample roles instantly:</p>
+          <div class="flex justify-center gap-2">
+            <button type="button" onclick="quickFillLogin('admin@workgrid.com', 'admin123')" class="text-[11px] px-2 py-1 bg-slate-800 rounded text-amber-300 hover:bg-slate-700">Admin</button>
+            <button type="button" onclick="quickFillLogin('client@demo.com', 'client123')" class="text-[11px] px-2 py-1 bg-slate-800 rounded text-indigo-300 hover:bg-slate-700">Client</button>
+            <button type="button" onclick="quickFillLogin('freelancer@demo.com', 'free123')" class="text-[11px] px-2 py-1 bg-slate-800 rounded text-emerald-300 hover:bg-slate-700">Freelancer</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="form-signup" onsubmit="handleSignupSubmit(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Full Name</label>
+          <input type="text" id="signup-name" required placeholder="Alex Vance" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Email Address</label>
+          <input type="email" id="signup-email" required placeholder="alex@company.com" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+          <input type="password" id="signup-password" minlength="6" required placeholder="Minimum 6 characters" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Select Primary Platform Role</label>
+          <select id="signup-role" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+            <option value="client">Client (Hire talent & post projects)</option>
+            <option value="freelancer">Freelancer (Bid on jobs & offer services)</option>
+            <option value="admin">Administrator (Moderation & platform stats)</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-semibold rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition-all">
+          Create Account &amp; Proceed
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 2: CLIENT POST JOB                       -->
+  <!-- ============================================== -->
+  <div id="post-job-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal('post-job-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-white">Post a New Project Requisition</h3>
+        <p class="text-xs text-slate-400 mt-1">Specify your requirements, milestones budget, and required competencies.</p>
+      </div>
+
+      <form id="form-post-job" onsubmit="handlePostJobSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Project Title</label>
+          <input type="text" id="job-title" required placeholder="e.g. Build an AI-Powered Document Search Engine" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Category</label>
+            <select id="job-category" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+              <option value="Full Stack Web">Full Stack Web</option>
+              <option value="AI & Machine Learning">AI & Machine Learning</option>
+              <option value="UI/UX & Product Design">UI/UX & Product Design</option>
+              <option value="Cloud & DevOps">Cloud & DevOps</option>
+              <option value="Mobile Development">Mobile Development</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Budget (USD $)</label>
+            <input type="number" id="job-budget" min="50" step="50" required placeholder="e.g. 2500" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Estimated Duration</label>
+            <input type="text" id="job-duration" required placeholder="e.g. 3 weeks, 1 month" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Required Skills (Comma separated)</label>
+            <input type="text" id="job-skills" required placeholder="e.g. React, Python, FastAPI, Pinecone" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Detailed Project Scope & Deliverables</label>
+          <textarea id="job-desc" rows="4" required placeholder="Describe technical requirements, expected deliverables, API constraints, and design expectations..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3">
+          <button type="button" onclick="closeModal('post-job-modal')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30">
+            Publish Job Posting
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 3: FREELANCER SUBMIT PROPOSAL / BID       -->
+  <!-- ============================================== -->
+  <div id="submit-bid-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+      <button onclick="closeModal('submit-bid-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div class="mb-4">
+        <span class="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Submit Formal Proposal</span>
+        <h3 class="text-lg font-bold text-white mt-1" id="bid-target-job-title">Job Title</h3>
+        <p class="text-xs text-slate-400 mt-1" id="bid-target-job-budget">Client Budget: $0</p>
+      </div>
+
+      <form id="form-submit-bid" onsubmit="handleProposalSubmit(event)" class="space-y-4">
+        <input type="hidden" id="bid-job-id" value="">
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Your Bid Amount ($)</label>
+            <input type="number" id="bid-amount" min="10" required placeholder="e.g. 1800" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Estimated Delivery</label>
+            <input type="text" id="bid-delivery" required placeholder="e.g. 14 Days" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Cover Letter / Technical Approach</label>
+          <textarea id="bid-pitch" rows="4" required placeholder="Detail your exact architectural strategy, past relevant case studies, and how you will execute this project flawlessly..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-cyan-500"></textarea>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+          <span>Client Escrow Safety:</span>
+          <span class="text-emerald-400 font-semibold">Funds secured prior to work</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('submit-bid-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-cyan-600/30">
+            Submit Proposal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 4: FREELANCER PROFILE / PORTFOLIO EDIT   -->
+  <!-- ============================================== -->
+  <div id="freelancer-profile-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal('freelancer-profile-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div class="mb-5">
+        <h3 class="text-xl font-bold text-white">Freelancer Professional Profile</h3>
+        <p class="text-xs text-slate-400 mt-1">Clients evaluate your rate, bio, and listed competencies before awarding work.</p>
+      </div>
+
+      <form id="form-freelancer-profile" onsubmit="handleSaveFreelancerProfile(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Professional Title</label>
+          <input type="text" id="prof-title" required placeholder="e.g. Senior Full-Stack Cloud Architect" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Hourly Rate ($/hr)</label>
+            <input type="number" id="prof-hourly" min="15" required placeholder="85" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Years of Experience</label>
+            <input type="number" id="prof-exp" min="1" max="40" required placeholder="6" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Core Skill Tags (Comma-separated)</label>
+          <input type="text" id="prof-skills" required placeholder="e.g. React, Next.js, Node.js, GraphQL, Docker" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Professional Summary &amp; Bio</label>
+          <textarea id="prof-bio" rows="3" required placeholder="Describe your background, specialty areas, notable shipped systems, and value proposition..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Featured Portfolio Project Link or Highlight</label>
+          <input type="text" id="prof-portfolio" placeholder="https://github.com/alex or brief portfolio highlight" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3">
+          <button type="button" onclick="closeModal('freelancer-profile-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30">
+            Save Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 5: COMPLETE & REVIEW CONTRACT            -->
+  <!-- ============================================== -->
+  <div id="review-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <button onclick="closeModal('review-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <h3 class="text-xl font-bold text-white mb-2">Release Escrow &amp; Review</h3>
+      <p class="text-xs text-slate-400 mb-4">Milestone deliverables verified. Releasing funds to freelancer and leave mutual platform feedback.</p>
+
+      <form id="form-review" onsubmit="handleReviewSubmit(event)" class="space-y-4">
+        <input type="hidden" id="review-job-id" value="">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Rating (1 to 5 Stars)</label>
+          <select id="review-stars" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-amber-400 focus:outline-none focus:border-indigo-500">
+            <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733; (5/5 Exceptional)</option>
+            <option value="4">&#9733;&#9733;&#9733;&#9733;&#9734; (4/5 Very Good)</option>
+            <option value="3">&#9733;&#9733;&#9733;&#9734;&#9734; (3/5 Satisfactory)</option>
+            <option value="2">&#9733;&#9733;&#9734;&#9734;&#9734; (2/5 Subpar)</option>
+            <option value="1">&#9733;&#9734;&#9734;&#9734;&#9734; (1/5 Poor)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Feedback &amp; Testimonial</label>
+          <textarea id="review-comment" rows="3" required placeholder="Alex delivered exceptional quality ahead of the deadline! Code was thoroughly tested and well architected." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('review-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-600/30">
+            Release Funds &amp; Finish
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * WorkGrid Core Architecture
+     * Storage Keys:
+     * - 'workgrid_users'
+     * - 'workgrid_jobs'
+     * - 'workgrid_bids'
+     * - 'workgrid_logs'
+     * - 'workgrid_auth_user'
+     */
+
+    const STORAGE_PREFIX = 'workgrid_';
+    let currentAuthUser = null;
+    let currentView = 'landing';
+    let viewingFreelancerBidsOnly = false;
+
+    // Default Seed Data
+    const SEED_USERS = [
+      {
+        id: 'usr_admin',
+        name: 'Platform Overseer',
+        email: 'admin@workgrid.com',
+        password: 'admin123',
+        role: 'admin',
+        status: 'active',
+        created: '2026-01-10'
+      },
+      {
+        id: 'usr_client1',
+        name: 'Nexus Tech Labs',
+        email: 'client@demo.com',
+        password: 'client123',
+        role: 'client',
+        status: 'active',
+        created: '2026-02-15'
+      },
+      {
+        id: 'usr_free1',
+        name: 'Alex Vance (Full Stack Dev)',
+        email: 'freelancer@demo.com',
+        password: 'free123',
+        role: 'freelancer',
+        status: 'active',
+        title: 'Lead Full-Stack & Cloud Specialist',
+        hourlyRate: 85,
+        experience: 7,
+        skills: ['React', 'Node.js', 'PostgreSQL', 'Docker', 'AWS'],
+        bio: 'Senior software architect specialized in high-performance web applications and cloud migration.',
+        portfolio: 'https://github.com/demo-alex',
+        created: '2026-02-20'
+      },
+      {
+        id: 'usr_free2',
+        name: 'Elena Rostova (AI Researcher)',
+        email: 'elena@demo.com',
+        password: 'free123',
+        role: 'freelancer',
+        status: 'active',
+        title: 'Deep Learning & LLM Engineer',
+        hourlyRate: 110,
+        experience: 5,
+        skills: ['Python', 'PyTorch', 'LangChain', 'OpenAI', 'VectorDB'],
+        bio: 'Ex-AI lab engineer building production RAG frameworks and custom agentic workflows.',
+        portfolio: 'https://huggingface.co/demo-elena',
+        created: '2026-03-01'
+      }
+    ];
+
+    const SEED_JOBS = [
+      {
+        id: 'job_101',
+        clientId: 'usr_client1',
+        clientName: 'Nexus Tech Labs',
+        title: 'Autonomous Multi-Agent Customer Support Pipeline',
+        category: 'AI & Machine Learning',
+        budget: 4500,
+        duration: '4 Weeks',
+        skills: ['Python', 'FastAPI', 'LangChain', 'Redis', 'Docker'],
+        desc: 'We require an end-to-end customer query resolution pipeline connecting our CRM to a vector database with automated fallback escalation to human operators.',
+        status: 'open', // open, in-progress, completed, flagged
+        hiredBidId: null,
+        created: '2026-03-12',
+        review: null
+      },
+      {
+        id: 'job_102',
+        clientId: 'usr_client1',
+        clientName: 'Nexus Tech Labs',
+        title: 'Next.js 15 & Tailwind Design System Refactor',
+        category: 'Full Stack Web',
+        budget: 2800,
+        duration: '2 Weeks',
+        skills: ['React', 'Next.js', 'Tailwind CSS', 'TypeScript'],
+        desc: 'Overhaul our existing enterprise SaaS client frontend to Next.js App Router with responsive dark mode, accessibility audits, and 95+ Google Lighthouse scores.',
+        status: 'in-progress',
+        hiredBidId: 'bid_201',
+        created: '2026-03-15',
+        review: null
+      },
+      {
+        id: 'job_103',
+        clientId: 'usr_client1',
+        clientName: 'Nexus Tech Labs',
+        title: 'Kubernetes Multi-Region Cluster & CI/CD Hardening',
+        category: 'Cloud & DevOps',
+        budget: 3400,
+        duration: '3 Weeks',
+        skills: ['Kubernetes', 'Terraform', 'AWS EKS', 'GitHub Actions'],
+        desc: 'Implement zero-downtime deployment workflows and automated rollback capabilities across US-East and EU-Central cloud clusters.',
+        status: 'open',
+        hiredBidId: null,
+        created: '2026-03-18',
+        review: null
+      },
+      {
+        id: 'job_104',
+        clientId: 'usr_client1',
+        clientName: 'Nexus Tech Labs',
+        title: 'Cross-Platform React Native Fintech Dashboard',
+        category: 'Mobile Development',
+        budget: 5200,
+        duration: '5 Weeks',
+        skills: ['React Native', 'TypeScript', 'Expo', 'Jest'],
+        desc: 'Build a mobile wallet tracking balances, biometric authentication, and offline synchronization for iOS and Android.',
+        status: 'completed',
+        hiredBidId: 'bid_202',
+        created: '2026-03-05',
+        review: {
+          stars: 5,
+          comment: 'Incredible execution by Alex Vance! Shipped 4 days ahead of scheduled timeline.'
+        }
+      }
+    ];
+
+    const SEED_BIDS = [
+      {
+        id: 'bid_201',
+        jobId: 'job_102',
+        freelancerId: 'usr_free1',
+        freelancerName: 'Alex Vance',
+        freelancerEmail: 'freelancer@demo.com',
+        bidAmount: 2600,
+        deliveryTime: '12 Days',
+        pitch: 'I have refactored 6 enterprise SaaS applications to Next.js 15 App router. I will implement static page optimization and custom tailwind plugin tokens.',
+        status: 'accepted', // pending, accepted, rejected
+        submittedAt: '2026-03-16'
+      },
+      {
+        id: 'bid_202',
+        jobId: 'job_104',
+        freelancerId: 'usr_free1',
+        freelancerName: 'Alex Vance',
+        freelancerEmail: 'freelancer@demo.com',
+        bidAmount: 5200,
+        deliveryTime: '30 Days',
+        pitch: 'Extensive fintech background with biometric authentication integrations and secure hardware enclave storage.',
+        status: 'accepted',
+        submittedAt: '2026-03-06'
+      },
+      {
+        id: 'bid_203',
+        jobId: 'job_101',
+        freelancerId: 'usr_free2',
+        freelancerName: 'Elena Rostova',
+        freelancerEmail: 'elena@demo.com',
+        bidAmount: 4300,
+        deliveryTime: '21 Days',
+        pitch: 'Specialized in LangGraph and hybrid semantic vector search with custom rerankers for near-zero hallucination rates.',
+        status: 'pending',
+        submittedAt: '2026-03-14'
+      }
+    ];
+
+    const SEED_LOGS = [
+      { id: 'log_1', text: 'Escrow payment of $5,200 released to Alex Vance for job #104', date: '2026-03-20 14:32' },
+      { id: 'log_2', text: 'Nexus Tech Labs accepted proposal #201 ($2,600 held in Escrow)', date: '2026-03-16 11:20' },
+      { id: 'log_3', text: 'Elena Rostova submitted proposal for Autonomous Multi-Agent Pipeline', date: '2026-03-14 09:15' },
+      { id: 'log_4', text: 'New project listing approved: Multi-Region Cluster Hardening', date: '2026-03-18 16:40' }
+    ];
+
+    // Initialize or read storage
+    function initDatabase() {
+      if (!localStorage.getItem(STORAGE_PREFIX + 'users')) {
+        localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(SEED_USERS));
+      }
+      if (!localStorage.getItem(STORAGE_PREFIX + 'jobs')) {
+        localStorage.setItem(STORAGE_PREFIX + 'jobs', JSON.stringify(SEED_JOBS));
+      }
+      if (!localStorage.getItem(STORAGE_PREFIX + 'bids')) {
+        localStorage.setItem(STORAGE_PREFIX + 'bids', JSON.stringify(SEED_BIDS));
+      }
+      if (!localStorage.getItem(STORAGE_PREFIX + 'logs')) {
+        localStorage.setItem(STORAGE_PREFIX + 'logs', JSON.stringify(SEED_LOGS));
+      }
+
+      // Check existing session
+      const savedAuth = localStorage.getItem(STORAGE_PREFIX + 'auth_user');
+      if (savedAuth) {
+        try {
+          currentAuthUser = JSON.parse(savedAuth);
+        } catch(e) {
+          currentAuthUser = null;
+        }
+      }
+    }
+
+    function getDB(key) {
+      return JSON.parse(localStorage.getItem(STORAGE_PREFIX + key) || '[]');
+    }
+
+    function setDB(key, data) {
+      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
+    }
+
+    function addAuditLog(text) {
+      const logs = getDB('logs');
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      logs.unshift({
+        id: 'log_' + Date.now(),
+        text,
+        date: timeStr
+      });
+      setDB('logs', logs);
+    }
+
+    function resetPlatformData() {
+      if (confirm('Are you sure you want to reset all mock platform data to factory defaults?')) {
+        localStorage.removeItem(STORAGE_PREFIX + 'users');
+        localStorage.removeItem(STORAGE_PREFIX + 'jobs');
+        localStorage.removeItem(STORAGE_PREFIX + 'bids');
+        localStorage.removeItem(STORAGE_PREFIX + 'logs');
+        initDatabase();
+        showToast('Platform seed data restored successfully!', 'success');
+        navigateTo('admin');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const bgColors = {
+        success: 'bg-emerald-950 border-emerald-500 text-emerald-200',
+        error: 'bg-rose-950 border-rose-500 text-rose-200',
+        info: 'bg-indigo-950 border-indigo-500 text-indigo-200',
+        warning: 'bg-amber-950 border-amber-500 text-amber-200'
+      };
+
+      toast.className = `p-4 rounded-xl border pointer-events-auto shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 flex items-start gap-3 text-xs ${bgColors[type] || bgColors.info}`;
+      
+      toast.innerHTML = `
+        <div class="mt-0.5 font-bold">
+          ${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}
+        </div>
+        <div class="flex-1 font-medium leading-relaxed">${message}</div>
+      `;
+
+      container.appendChild(toast);
+      
+      // Animate in
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      // Auto dismiss
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function navigateTo(targetView) {
+      const views = ['landing', 'client', 'freelancer', 'admin'];
+
+      // Permission checks
+      if (targetView === 'client' && (!currentAuthUser || (currentAuthUser.role !== 'client' && currentAuthUser.role !== 'admin'))) {
+        showToast('Please sign in with a Client account to access the Client Workspace.', 'warning');
+        openModal('auth-modal');
+        return;
+      }
+
+      if (targetView === 'admin' && (!currentAuthUser || currentAuthUser.role !== 'admin')) {
+        showToast('Restricted: Admin credentials required to access the Administration Console.', 'error');
+        openModal('auth-modal');
+        return;
+      }
+
+      // Hide all views
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      // Show target
+      const targetEl = document.getElementById(`view-${targetView}`);
+      if (targetEl) {
+        targetEl.classList.remove('hidden');
+        currentView = targetView;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Render view-specific fresh data
+      if (targetView === 'landing') renderLandingView();
+      if (targetView === 'client') renderClientView();
+      if (targetView === 'freelancer') renderFreelancerView();
+      if (targetView === 'admin') renderAdminView();
+
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const authContainer = document.getElementById('nav-auth-container');
+      const adminLink = document.getElementById('admin-nav-link');
+
+      // Admin button in navbar visibility
+      if (currentAuthUser && currentAuthUser.role === 'admin') {
+        adminLink.classList.remove('hidden');
+      } else {
+        adminLink.classList.add('hidden');
+      }
+
+      if (currentAuthUser) {
+        const roleColors = {
+          admin: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+          client: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+          freelancer: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+        };
+
+        authContainer.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="flex flex-col text-right hidden sm:flex">
+              <span class="text-xs font-semibold text-white leading-tight">${escapeHTML(currentAuthUser.name)}</span>
+              <span class="text-[10px] font-mono capitalize text-slate-400">${currentAuthUser.role}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold uppercase border ${roleColors[currentAuthUser.role] || ''}">
+              ${currentAuthUser.role}
+            </span>
+            <div class="h-6 w-px bg-slate-800 mx-1"></div>
+            <button onclick="handleLogout()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors">
+              Sign Out
+            </button>
+          </div>
+        `;
+      } else {
+        authContainer.innerHTML = `
+          <button onclick="openModal('auth-modal')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all">
+            Sign In / Register
+          </button>
+        `;
+      }
+    }
+
+    function switchAuthTab(tab) {
+      const formLogin = document.getElementById('form-login');
+      const formSignup = document.getElementById('form-signup');
+      const tabLogin = document.getElementById('auth-tab-login');
+      const tabSignup = document.getElementById('auth-tab-signup');
+
+      if (tab === 'login') {
+        formLogin.classList.remove('hidden');
+        formSignup.classList.add('hidden');
+        tabLogin.className = 'flex-1 pb-3 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-500 text-center';
+        tabSignup.className = 'flex-1 pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent text-center';
+      } else {
+        formSignup.classList.remove('hidden');
+        formLogin.classList.add('hidden');
+        tabSignup.className = 'flex-1 pb-3 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-500 text-center';
+        tabLogin.className = 'flex-1 pb-3 text-sm font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent text-center';
+      }
+    }
+
+    function quickFillLogin(email, pass) {
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = pass;
+    }
+
+    function quickLogin(email, pass) {
+      const users = getDB('users');
+      const user = users.find(u => u.email === email && u.password === pass);
+      if (user) {
+        if (user.status === 'suspended') {
+          showToast('Account is currently suspended. Please contact platform administrators.', 'error');
+          return;
+        }
+        currentAuthUser = user;
+        localStorage.setItem(STORAGE_PREFIX + 'auth_user', JSON.stringify(user));
+        showToast(`Signed in as ${user.name} (${user.role.toUpperCase()})`, 'success');
+        
+        if (user.role === 'admin') navigateTo('admin');
+        else if (user.role === 'client') navigateTo('client');
+        else navigateTo('freelancer');
+      } else {
+        showToast('Demo account credentials not found.', 'error');
+      }
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+
+      const users = getDB('users');
+      const matched = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+
+      if (!matched) {
+        showToast('Invalid email or password combination.', 'error');
+        return;
+      }
+
+      if (matched.status === 'suspended') {
+        showToast('Your account has been suspended by the platform administrator.', 'error');
+        return;
+      }
+
+      currentAuthUser = matched;
+      localStorage.setItem(STORAGE_PREFIX + 'auth_user', JSON.stringify(matched));
+      closeModal('auth-modal');
+      showToast(`Welcome back, ${matched.name}!`, 'success');
+
+      if (matched.role === 'admin') navigateTo('admin');
+      else if (matched.role === 'client') navigateTo('client');
+      else navigateTo('freelancer');
+    }
+
+    function handleSignupSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value.trim();
+      const role = document.getElementById('signup-role').value;
+
+      const users = getDB('users');
+      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        showToast('An account with this email address already exists.', 'error');
+        return;
+      }
+
+      const newUser = {
+        id: 'usr_' + Date.now(),
+        name,
+        email,
+        password,
+        role,
+        status: 'active',
+        created: new Date().toISOString().split('T')[0]
+      };
+
+      if (role === 'freelancer') {
+        newUser.title = 'Professional Specialist';
+        newUser.hourlyRate = 50;
+        newUser.experience = 3;
+        newUser.skills = ['Web Development', 'Consulting'];
+        newUser.bio = 'Experienced independent contractor ready for production projects.';
+      }
+
+      users.push(newUser);
+      setDB('users', users);
+
+      currentAuthUser = newUser;
+      localStorage.setItem(STORAGE_PREFIX + 'auth_user', JSON.stringify(newUser));
+      addAuditLog(`New user registered: ${name} (${role})`);
+
+      closeModal('auth-modal');
+      showToast(`Account successfully registered as ${role.toUpperCase()}!`, 'success');
+
+      if (role === 'admin') navigateTo('admin');
+      else if (role === 'client') navigateTo('client');
+      else navigateTo('freelancer');
+    }
+
+    function handleLogout() {
+      currentAuthUser = null;
+      localStorage.removeItem(STORAGE_PREFIX + 'auth_user');
+      showToast('You have been signed out.', 'info');
+      navigateTo('landing');
+    }
+
+    function renderLandingView() {
+      const jobs = getDB('jobs');
+      const featuredJobs = jobs.filter(j => j.status === 'open').slice(0, 3);
+      const container = document.getElementById('landing-featured-jobs');
+
+      if (!container) return;
+
+      if (featuredJobs.length === 0) {
+        container.innerHTML = `<div class="col-span-3 text-center text-slate-500 py-8">No open jobs at the moment. Be the first to post!</div>`;
+        return;
+      }
+
+      container.innerHTML = featuredJobs.map(job => `
+        <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between hover:border-indigo-500/40 transition-all">
+          <div>
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-medium">${escapeHTML(job.category)}</span>
+              <span class="font-mono text-emerald-400 font-bold">$${job.budget.toLocaleString()}</span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-2 line-clamp-1">${escapeHTML(job.title)}</h3>
+            <p class="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">${escapeHTML(job.desc)}</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              ${job.skills.slice(0, 3).map(s => `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800 font-mono">${escapeHTML(s)}</span>`).join('')}
+            </div>
+          </div>
+          <button onclick="bidOnSpecificJob('${job.id}')" class="w-full py-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-xl text-xs font-semibold border border-indigo-500/30 transition-colors">
+            Bid on this Job
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function filterJobsByCategory(cat) {
+      navigateTo('freelancer');
+      const select = document.getElementById('job-category-filter');
+      if (select) {
+        select.value = cat;
+        renderFreelancerJobList();
+      }
+    }
+
+    function renderClientView() {
+      if (!currentAuthUser) return;
+      const jobs = getDB('jobs');
+      const bids = getDB('bids');
+
+      // Filter client's jobs
+      const clientJobs = (currentAuthUser.role === 'admin') 
+        ? jobs 
+        : jobs.filter(j => j.clientId === currentAuthUser.id || j.clientName === currentAuthUser.name);
+
+      // Client Stats
+      const totalPosted = clientJobs.length;
+      const activeJobs = clientJobs.filter(j => j.status === 'open' || j.status === 'in-progress').length;
+      const completedJobs = clientJobs.filter(j => j.status === 'completed').length;
+      const totalEscrow = clientJobs.filter(j => j.status === 'in-progress').reduce((sum, j) => sum + Number(j.budget), 0);
+
+      document.getElementById('client-stat-total').innerText = totalPosted;
+      document.getElementById('client-stat-active').innerText = activeJobs;
+      document.getElementById('client-stat-completed').innerText = completedJobs;
+      document.getElementById('client-stat-escrow').innerText = `$${totalEscrow.toLocaleString()}`;
+      document.getElementById('client-job-count').innerText = totalPosted;
+
+      const container = document.getElementById('client-jobs-list');
+      if (!container) return;
+
+      if (clientJobs.length === 0) {
+        container.innerHTML = `
+          <div class="glass-panel p-10 rounded-2xl text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-indigo-950 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mx-auto">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </div>
+            <h4 class="text-white font-semibold">You have no posted job requisitions yet</h4>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Create your first milestone project to tap into our pre-vetted network of engineers and designers.</p>
+            <button onclick="openModal('post-job-modal')" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold mt-2">
+              Post Your First Job
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = clientJobs.map(job => {
+        const jobBids = bids.filter(b => b.jobId === job.id);
+        const statusColors = {
+          'open': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+          'in-progress': 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          'completed': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+          'flagged': 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+        };
+
+        return `
+          <div class="glass-panel rounded-2xl p-6 transition-all border border-slate-800">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-800/80">
+              <div>
+                <div class="flex items-center gap-2.5">
+                  <h3 class="text-lg font-bold text-white">${escapeHTML(job.title)}</h3>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase border ${statusColors[job.status] || ''}">
+                    ${job.status}
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 mt-1">
+                  <span>Category: <strong class="text-slate-300">${escapeHTML(job.category)}</strong></span>
+                  <span>&bull;</span>
+                  <span>Duration: <strong class="text-slate-300">${escapeHTML(job.duration)}</strong></span>
+                  <span>&bull;</span>
+                  <span>Escrow Allocation: <strong class="text-emerald-400 font-mono">$${Number(job.budget).toLocaleString()}</strong></span>
+                </div>
+              </div>
+
+              <!-- Quick Job Action Buttons -->
+              <div class="flex items-center gap-2">
+                ${job.status === 'in-progress' ? `
+                  <button onclick="openReviewModal('${job.id}')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Approve &amp; Release Funds</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-300 my-4 leading-relaxed">${escapeHTML(job.desc)}</p>
+
+            <div class="flex flex-wrap gap-1.5 mb-5">
+              ${job.skills.map(s => `<span class="text-[11px] px-2 py-0.5 rounded bg-slate-900 text-indigo-300 border border-slate-800">${escapeHTML(s)}</span>`).join('')}
+            </div>
+
+            <!-- Inbound Proposals Accordion / List -->
+            <div class="bg-slate-950/70 rounded-xl p-4 border border-slate-800">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Inbound Freelancer Bids (${jobBids.length})
+                </span>
+                <span class="text-[11px] text-slate-500">Review candidates below</span>
+              </div>
+
+              ${jobBids.length === 0 ? `
+                <div class="text-xs text-slate-500 py-2">No freelancers have submitted bids on this requisition yet.</div>
+              ` : `
+                <div class="space-y-3">
+                  ${jobBids.map(bid => `
+                    <div class="p-3.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                          <span class="text-xs font-bold text-white">${escapeHTML(bid.freelancerName)}</span>
+                          <span class="text-[10px] text-slate-400 font-mono">(${escapeHTML(bid.freelancerEmail)})</span>
+                          ${bid.status === 'accepted' ? `<span class="text-[10px] px-2 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">Hired Contractor</span>` : ''}
+                        </div>
+                        <p class="text-xs text-slate-400 italic">"${escapeHTML(bid.pitch)}"</p>
+                        <div class="text-[11px] text-slate-400">
+                          Proposed Delivery: <span class="text-slate-200 font-semibold">${escapeHTML(bid.deliveryTime)}</span> &bull; 
+                          Bid Quote: <span class="text-cyan-400 font-bold font-mono">$${Number(bid.bidAmount).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-2 shrink-0">
+                        ${job.status === 'open' && bid.status === 'pending' ? `
+                          <button onclick="hireFreelancer('${job.id}', '${bid.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors">
+                            Hire &amp; Lock Escrow
+                          </button>
+                        ` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+
+            ${job.review ? `
+              <div class="mt-4 p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
+                <span>&#9733; Verified Completed Rating: <strong>${job.review.stars}/5 Stars</strong> - "${escapeHTML(job.review.comment)}"</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handlePostJobSubmit(e) {
+      e.preventDefault();
+      if (!currentAuthUser) return;
+
+      const title = document.getElementById('job-title').value.trim();
+      const category = document.getElementById('job-category').value;
+      const budget = Number(document.getElementById('job-budget').value);
+      const duration = document.getElementById('job-duration').value.trim();
+      const skillsStr = document.getElementById('job-skills').value.trim();
+      const desc = document.getElementById('job-desc').value.trim();
+
+      const skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
+
+      const newJob = {
+        id: 'job_' + Date.now(),
+        clientId: currentAuthUser.id,
+        clientName: currentAuthUser.name,
+        title,
+        category,
+        budget,
+        duration,
+        skills,
+        desc,
+        status: 'open',
+        hiredBidId: null,
+        created: new Date().toISOString().split('T')[0],
+        review: null
+      };
+
+      const jobs = getDB('jobs');
+      jobs.unshift(newJob);
+      setDB('jobs', jobs);
+
+      addAuditLog(`Client ${currentAuthUser.name} posted job "${title}" ($${budget})`);
+      closeModal('post-job-modal');
+      e.target.reset();
+      showToast('Project listing published to talent marketplace!', 'success');
+      renderClientView();
+    }
+
+    function hireFreelancer(jobId, bidId) {
+      const jobs = getDB('jobs');
+      const bids = getDB('bids');
+
+      const jobIndex = jobs.findIndex(j => j.id === jobId);
+      const bidIndex = bids.findIndex(b => b.id === bidId);
+
+      if (jobIndex === -1 || bidIndex === -1) return;
+
+      jobs[jobIndex].status = 'in-progress';
+      jobs[jobIndex].hiredBidId = bidId;
+
+      bids[bidIndex].status = 'accepted';
+
+      setDB('jobs', jobs);
+      setDB('bids', bids);
+
+      addAuditLog(`Client hired ${bids[bidIndex].freelancerName} for job "${jobs[jobIndex].title}". Escrow $${bids[bidIndex].bidAmount} locked.`);
+      showToast(`Hired ${bids[bidIndex].freelancerName}! Escrow funded. Work in progress.`, 'success');
+      renderClientView();
+    }
+
+    function openReviewModal(jobId) {
+      document.getElementById('review-job-id').value = jobId;
+      openModal('review-modal');
+    }
+
+    function handleReviewSubmit(e) {
+      e.preventDefault();
+      const jobId = document.getElementById('review-job-id').value;
+      const stars = Number(document.getElementById('review-stars').value);
+      const comment = document.getElementById('review-comment').value.trim();
+
+      const jobs = getDB('jobs');
+      const job = jobs.find(j => j.id === jobId);
+
+      if (job) {
+        job.status = 'completed';
+        job.review = { stars, comment };
+        setDB('jobs', jobs);
+        addAuditLog(`Job "${job.title}" marked completed. Escrow released to freelancer. Rating: ${stars}/5.`);
+        closeModal('review-modal');
+        showToast('Milestone confirmed, Escrow released and rating published!', 'success');
+        renderClientView();
+      }
+    }
+
+    function renderFreelancerView() {
+      updateFreelancerBidCounter();
+      if (viewingFreelancerBidsOnly) {
+        renderFreelancerMyBidsList();
+      } else {
+        renderFreelancerJobList();
+      }
+    }
+
+    function toggleMyBidsView() {
+      viewingFreelancerBidsOnly = !viewingFreelancerBidsOnly;
+      const btn = document.getElementById('toggle-bids-btn');
+      const jobsContainer = document.getElementById('freelancer-jobs-container');
+      const bidsContainer = document.getElementById('freelancer-bids-container');
+      const heading = document.getElementById('freelancer-section-heading');
+
+      if (viewingFreelancerBidsOnly) {
+        btn.classList.add('bg-indigo-600', 'text-white');
+        btn.classList.remove('bg-indigo-900/40', 'text-indigo-300');
+        jobsContainer.classList.add('hidden');
+        bidsContainer.classList.remove('hidden');
+        heading.innerText = 'My Submitted Proposals & Status';
+        renderFreelancerMyBidsList();
+      } else {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-indigo-900/40', 'text-indigo-300');
+        jobsContainer.classList.remove('hidden');
+        bidsContainer.classList.add('hidden');
+        heading.innerText = 'Available Marketplace Missions';
+        renderFreelancerJobList();
+      }
+    }
+
+    function updateFreelancerBidCounter() {
+      const bids = getDB('bids');
+      const count = currentAuthUser ? bids.filter(b => b.freelancerId === currentAuthUser.id || b.freelancerEmail === currentAuthUser.email).length : 0;
+      const el = document.getElementById('freelancer-bid-count');
+      if (el) el.innerText = count;
+    }
+
+    function renderFreelancerJobList() {
+      const jobs = getDB('jobs');
+      const bids = getDB('bids');
+      const search = (document.getElementById('job-search-input')?.value || '').toLowerCase();
+      const cat = document.getElementById('job-category-filter')?.value || 'ALL';
+      const sort = document.getElementById('job-sort-filter')?.value || 'newest';
+
+      let filtered = jobs.filter(j => j.status === 'open' || j.status === 'in-progress');
+
+      if (cat !== 'ALL') {
+        filtered = filtered.filter(j => j.category === cat);
+      }
+
+      if (search) {
+        filtered = filtered.filter(j => 
+          j.title.toLowerCase().includes(search) ||
+          j.desc.toLowerCase().includes(search) ||
+          j.skills.some(s => s.toLowerCase().includes(search))
+        );
+      }
+
+      if (sort === 'budget-high') filtered.sort((a,b) => b.budget - a.budget);
+      else if (sort === 'budget-low') filtered.sort((a,b) => a.budget - b.budget);
+      else filtered.sort((a,b) => new Date(b.created) - new Date(a.created));
+
+      const matchedEl = document.getElementById('freelancer-jobs-matched');
+      if (matchedEl) matchedEl.innerText = `Showing ${filtered.length} active opportunities`;
+
+      const container = document.getElementById('freelancer-jobs-container');
+      if (!container) return;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-3 glass-panel p-10 rounded-2xl text-center text-slate-400">
+            No projects matched your criteria. Try adjusting your search query or filters.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(job => {
+        const hasBid = currentAuthUser && bids.some(b => b.jobId === job.id && (b.freelancerId === currentAuthUser.id || b.freelancerEmail === currentAuthUser.email));
+        
+        return `
+          <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between hover:border-slate-700 transition-all">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-medium">
+                  ${escapeHTML(job.category)}
+                </span>
+                <span class="text-emerald-400 font-mono font-bold text-sm">
+                  $${Number(job.budget).toLocaleString()}
+                </span>
+              </div>
+
+              <h3 class="text-base font-bold text-white mb-2 leading-snug">${escapeHTML(job.title)}</h3>
+              <p class="text-xs text-slate-400 line-clamp-3 mb-4 leading-relaxed">${escapeHTML(job.desc)}</p>
+
+              <div class="flex flex-wrap gap-1.5 mb-4">
+                ${job.skills.map(s => `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800 font-mono">${escapeHTML(s)}</span>`).join('')}
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+              <span class="text-[11px] text-slate-400 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                ${escapeHTML(job.duration)}
+              </span>
+
+              ${hasBid ? `
+                <span class="text-xs font-semibold text-emerald-400 bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-500/30 flex items-center gap-1">
+                  ✓ Bid Submitted
+                </span>
+              ` : job.status === 'open' ? `
+                <button onclick="bidOnSpecificJob('${job.id}')" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-indigo-600/20 transition-colors">
+                  Apply &amp; Bid
+                </button>
+              ` : `
+                <span class="text-xs text-amber-400 font-medium">In Progress</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFreelancerMyBidsList() {
+      const bids = getDB('bids');
+      const jobs = getDB('jobs');
+      const container = document.getElementById('freelancer-bids-container');
+
+      if (!container) return;
+
+      const myBids = currentAuthUser ? bids.filter(b => b.freelancerId === currentAuthUser.id || b.freelancerEmail === currentAuthUser.email) : [];
+
+      if (myBids.length === 0) {
+        container.innerHTML = `
+          <div class="glass-panel p-10 rounded-2xl text-center text-slate-400">
+            You haven't submitted proposals on any active jobs yet. Browse the marketplace and submit your competitive pitch!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = myBids.map(bid => {
+        const job = jobs.find(j => j.id === bid.jobId) || { title: 'Unknown Project', budget: 0, status: 'unknown' };
+        const statusBadge = {
+          'accepted': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+          'pending': 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          'rejected': 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+        }[bid.status] || 'bg-slate-800 text-slate-400';
+
+        return `
+          <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <h4 class="text-base font-bold text-white">${escapeHTML(job.title)}</h4>
+                <span class="text-xs px-2.5 py-0.5 rounded-full uppercase font-semibold border ${statusBadge}">${bid.status}</span>
+              </div>
+              <p class="text-xs text-slate-300 italic">Proposal pitch: "${escapeHTML(bid.pitch)}"</p>
+              <div class="text-xs text-slate-400 flex items-center gap-3">
+                <span>Proposed Timeline: <strong class="text-slate-200">${escapeHTML(bid.deliveryTime)}</strong></span>
+                <span>&bull;</span>
+                <span>Quote: <strong class="text-cyan-400 font-mono">$${Number(bid.bidAmount).toLocaleString()}</strong></span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              ${bid.status === 'accepted' ? `
+                <div class="text-right">
+                  <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Escrow Locked ($${Number(bid.bidAmount).toLocaleString()})
+                  </span>
+                  <span class="text-[10px] text-slate-500">Deliver milestones to client</span>
+                </div>
+              ` : `
+                <span class="text-xs text-slate-400 font-mono">Under client review</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function bidOnSpecificJob(jobId) {
+      if (!currentAuthUser) {
+        showToast('Please sign in or register as a Freelancer to submit a proposal.', 'info');
+        openModal('auth-modal');
+        return;
+      }
+
+      if (currentAuthUser.role !== 'freelancer' && currentAuthUser.role !== 'admin') {
+        showToast('Only Freelancer accounts can submit project proposals. Switch your role or create a freelancer profile.', 'warning');
+        return;
+      }
+
+      const jobs = getDB('jobs');
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      document.getElementById('bid-job-id').value = job.id;
+      document.getElementById('bid-target-job-title').innerText = job.title;
+      document.getElementById('bid-target-job-budget').innerText = `Client Budget: $${Number(job.budget).toLocaleString()}`;
+      document.getElementById('bid-amount').value = job.budget;
+
+      openModal('submit-bid-modal');
+    }
+
+    function handleProposalSubmit(e) {
+      e.preventDefault();
+      if (!currentAuthUser) return;
+
+      const jobId = document.getElementById('bid-job-id').value;
+      const bidAmount = Number(document.getElementById('bid-amount').value);
+      const deliveryTime = document.getElementById('bid-delivery').value.trim();
+      const pitch = document.getElementById('bid-pitch').value.trim();
+
+      const newBid = {
+        id: 'bid_' + Date.now(),
+        jobId,
+        freelancerId: currentAuthUser.id,
+        freelancerName: currentAuthUser.name,
+        freelancerEmail: currentAuthUser.email,
+        bidAmount,
+        deliveryTime,
+        pitch,
+        status: 'pending',
+        submittedAt: new Date().toISOString().split('T')[0]
+      };
+
+      const bids = getDB('bids');
+      bids.push(newBid);
+      setDB('bids', bids);
+
+      const jobs = getDB('jobs');
+      const job = jobs.find(j => j.id === jobId);
+
+      addAuditLog(`Freelancer ${currentAuthUser.name} submitted $${bidAmount} bid on "${job ? job.title : 'Project'}"`);
+      closeModal('submit-bid-modal');
+      e.target.reset();
+
+      showToast('Proposal submitted successfully to client!', 'success');
+      renderFreelancerView();
+    }
+
+    function openFreelancerProfileModal() {
+      if (!currentAuthUser) {
+        openModal('auth-modal');
+        return;
+      }
+
+      document.getElementById('prof-title').value = currentAuthUser.title || 'Independent Professional';
+      document.getElementById('prof-hourly').value = currentAuthUser.hourlyRate || 75;
+      document.getElementById('prof-exp').value = currentAuthUser.experience || 4;
+      document.getElementById('prof-skills').value = (currentAuthUser.skills || ['JavaScript', 'HTML5', 'CSS3']).join(', ');
+      document.getElementById('prof-bio').value = currentAuthUser.bio || 'Experienced freelancer focused on delivering high caliber software and product designs.';
+      document.getElementById('prof-portfolio').value = currentAuthUser.portfolio || '';
+
+      openModal('freelancer-profile-modal');
+    }
+
+    function handleSaveFreelancerProfile(e) {
+      e.preventDefault();
+      if (!currentAuthUser) return;
+
+      const title = document.getElementById('prof-title').value.trim();
+      const hourlyRate = Number(document.getElementById('prof-hourly').value);
+      const experience = Number(document.getElementById('prof-exp').value);
+      const skills = document.getElementById('prof-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+      const bio = document.getElementById('prof-bio').value.trim();
+      const portfolio = document.getElementById('prof-portfolio').value.trim();
+
+      const users = getDB('users');
+      const uIndex = users.findIndex(u => u.id === currentAuthUser.id);
+
+      if (uIndex !== -1) {
+        users[uIndex].title = title;
+        users[uIndex].hourlyRate = hourlyRate;
+        users[uIndex].experience = experience;
+        users[uIndex].skills = skills;
+        users[uIndex].bio = bio;
+        users[uIndex].portfolio = portfolio;
+
+        setDB('users', users);
+        currentAuthUser = users[uIndex];
+        localStorage.setItem(STORAGE_PREFIX + 'auth_user', JSON.stringify(currentAuthUser));
+
+        showToast('Your freelancer portfolio & profile details were updated!', 'success');
+        closeModal('freelancer-profile-modal');
+      }
+    }
+
+    function renderAdminView() {
+      const users = getDB('users');
+      const jobs = getDB('jobs');
+      const bids = getDB('bids');
+      const logs = getDB('logs');
+
+      // Metric calculations
+      const totalVolume = jobs.reduce((sum, j) => sum + Number(j.budget), 0);
+      const commission = totalVolume * 0.05;
+
+      document.getElementById('adm-total-users').innerText = users.length;
+      document.getElementById('adm-total-jobs').innerText = jobs.length;
+      document.getElementById('adm-total-bids').innerText = bids.length;
+      document.getElementById('adm-escrow-volume').innerText = `$${totalVolume.toLocaleString()}`;
+      document.getElementById('adm-commission').innerText = `$${commission.toLocaleString()}`;
+
+      // User Governance Table
+      const userTable = document.getElementById('adm-users-table');
+      if (userTable) {
+        userTable.innerHTML = users.map(u => `
+          <tr class="hover:bg-slate-900/50 transition-colors">
+            <td class="px-4 py-3 font-sans">
+              <div class="font-bold text-white">${escapeHTML(u.name)}</div>
+              <div class="text-slate-400 text-xs">${escapeHTML(u.email)}</div>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] uppercase font-bold ${
+                u.role === 'admin' ? 'bg-amber-500/20 text-amber-300' :
+                u.role === 'client' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/20 text-emerald-300'
+              }">${u.role}</span>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] ${u.status === 'active' ? 'text-emerald-400' : 'text-rose-400'} font-bold">
+                ${u.status}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-right">
+              ${u.role !== 'admin' ? `
+                <button onclick="toggleUserStatus('${u.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded transition-colors ${u.status === 'active' ? 'text-rose-300 hover:text-rose-200' : 'text-emerald-300 hover:text-emerald-200'}">
+                  ${u.status === 'active' ? 'Freeze / Suspend' : 'Reactivate'}
+                </button>
+              ` : `<span class="text-slate-500 text-xs">Immutable</span>`}
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Job Listings Table
+      const jobTable = document.getElementById('adm-jobs-table');
+      if (jobTable) {
+        jobTable.innerHTML = jobs.map(j => `
+          <tr class="hover:bg-slate-900/50 transition-colors">
+            <td class="px-4 py-3 font-sans">
+              <div class="font-bold text-white max-w-xs truncate">${escapeHTML(j.title)}</div>
+              <div class="text-slate-400 text-xs">${escapeHTML(j.category)}</div>
+            </td>
+            <td class="px-4 py-3 font-sans text-slate-300">${escapeHTML(j.clientName)}</td>
+            <td class="px-4 py-3 text-emerald-400 font-bold">$${Number(j.budget).toLocaleString()}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] uppercase ${
+                j.status === 'open' ? 'text-cyan-400' :
+                j.status === 'in-progress' ? 'text-amber-400' :
+                j.status === 'completed' ? 'text-emerald-400' : 'text-rose-400'
+              }">${j.status}</span>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <button onclick="adminDeleteJob('${j.id}')" class="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs rounded transition-colors">
+                Remove / Takedown
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Audit Log stream
+      const logsContainer = document.getElementById('adm-audit-logs');
+      if (logsContainer) {
+        logsContainer.innerHTML = logs.map(l => `
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
+            <div class="text-slate-300 font-sans">${escapeHTML(l.text)}</div>
+            <div class="text-[10px] text-slate-500 font-mono">${escapeHTML(l.date)}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function toggleUserStatus(userId) {
+      const users = getDB('users');
+      const u = users.find(x => x.id === userId);
+      if (u) {
+        u.status = u.status === 'active' ? 'suspended' : 'active';
+        setDB('users', users);
+        addAuditLog(`Admin toggled status of user ${u.name} to ${u.status}`);
+        showToast(`User ${u.name} is now ${u.status}`, 'info');
+        renderAdminView();
+      }
+    }
+
+    function adminDeleteJob(jobId) {
+      let jobs = getDB('jobs');
+      const target = jobs.find(j => j.id === jobId);
+      if (target) {
+        jobs = jobs.filter(j => j.id !== jobId);
+        setDB('jobs', jobs);
+        addAuditLog(`Admin purged job listing "${target.title}"`);
+        showToast(`Job requisition successfully removed from platform.`, 'info');
+        renderAdminView();
+      }
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Window load and boot initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initDatabase();
+      updateAuthUI();
+      navigateTo('landing');
+    });
+  </script>
+</body>
+</html>
